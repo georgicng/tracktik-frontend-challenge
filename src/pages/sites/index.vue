@@ -3,9 +3,10 @@ import { ref, computed, watch } from "vue";
 import { useFetch } from "@/composables/useFetch";
 import { useStore } from "@/composables/useState";
 import { useRouter, useRoute } from "vue-router";
-import { getAddress, getContact, getAvatar, countryList } from "@/utils";
+import { getAddress, getContact, getAvatar, countryList, baseURL } from "@/utils";
 import { Site } from "@/types";
 
+//Routing specific variables
 const router = useRouter();
 const route = useRoute();
 const getParam = (key: string, defaultValue: string | null) => {
@@ -18,10 +19,12 @@ const getParam = (key: string, defaultValue: string | null) => {
   return defaultValue;
 };
 
-const drawer = ref(false);
-const client = ref(getParam("client", null));
+//Filter related variables
+const client = ref(getParam("clientId", null));
 const tag = ref(getParam("tag", null));
 const country = ref(getParam("address.country", null));
+
+//Sorting related variables
 const sortBy = ref(getParam("_sort", null));
 const sortOptions = [
   {
@@ -48,10 +51,15 @@ enum Direction {
 }
 const sortOrder = ref(getParam("_order", Direction.ASC));
 
+//Search model
 const query = ref(getParam("q", ""));
+
+//Pagination related models
 const page = ref(parseInt(getParam("_page", "1")));
 const perPage = ref(parseInt(getParam("_limit", "10")));
-const length = computed(() => totalCount.value / perPage.value);
+const length = computed(() => Math.floor(totalCount.value / perPage.value));
+
+//Build query params for route update, ensure void arguments are not included in the query
 const params = computed(() => {
   return {
     _page: String(page.value),
@@ -65,18 +73,32 @@ const params = computed(() => {
   };
 });
 
+//Getting sites from store to for caching sake
 const { sites, totalCount, setSites, clientOptions, tagOptions, setClients } =
   useStore();
+
+//Fetch hook for reuse
 const { data, hasError, isLoading, meta, fetchData, basicFetch } =
   useFetch<Site[]>();
+
+//Function to fetch sites data
 const fetch = async () => {
-  await fetchData("https://tracktik-challenge.staffr.com/sites", params.value);
+  await fetchData(`${baseURL}/sites`, params.value);
   setSites(data.value, meta.value.count);
 };
+
+
+//Pagination Actions
+const gotoPage = (input: number) => {
+  page.value = input;
+};
+
+//Trigger reload on pagination, need to do so cause pagination component can update the model directly and not trigger a fetch
 watch(page, () => {
   router.push({ query: params.value });
 });
 
+//Trigger reload on sorting
 watch(
   () => [sortBy.value, sortOrder.value],
   () => {
@@ -85,6 +107,38 @@ watch(
   }
 );
 
+//Search actions
+const search = () => {
+  page.value = 1;
+  router.push({ query: params.value });
+};
+
+const clearSearch = () => {
+  query.value = "";
+  page.value = 1;
+  router.push({ query: params.value });
+};
+
+//Filter Options
+const drawer = ref(false);
+const toggleDrawer = () => {
+  drawer.value = !drawer.value;
+};
+const applyFilters = () => {
+  page.value = 1;
+  toggleDrawer();
+  router.push({ query: params.value });
+};
+const clearFilters = () => {
+  country.value = null;
+  client.value = null;
+  tag.value = null;
+  page.value = 1;
+  toggleDrawer();
+  router.push({ query: params.value });
+};
+
+//Fetch Data on route update
 watch(
   () => route.query,
   () => {
@@ -92,34 +146,11 @@ watch(
   }
 );
 
-const search = () => {
-  page.value = 1;
-  fetch();
-};
-
-const clearSearch = () => {
-  query.value = "";
-  page.value = 1;
-  fetch();
-};
-
-const applyFilters = () => {
-  page.value = 1;
-  fetch();
-};
-
-const clearFilters = () => {
-  country.value = null;
-  client.value = null;
-  tag.value = null;
-  page.value = 1;
-  fetch();
-};
-
+//First load
 if (!sites.value?.length) {
   Promise.all([
     fetch(),
-    basicFetch("https://tracktik-challenge.staffr.com/clients"),
+    basicFetch(`${baseURL}/clients`),
   ]).then((values) => {
     setClients(values[1]);
   });
@@ -127,10 +158,18 @@ if (!sites.value?.length) {
 </script>
 
 <template>
-  <div>
-    <p v-if="isLoading">loading....</p>
-    <p v-else-if="hasError">Unable to retrieve users</p>
-    <div v-else-if="sites">
+  <v-toolbar flat>
+    <v-toolbar-title class="flex text-center"> Sites </v-toolbar-title>
+  </v-toolbar>
+  <v-skeleton-loader :loading="isLoading" type="actions, list-item-avatar-three-line, list-item-avatar-three-line, list-item-avatar-three-line, list-item-avatar-three-line, actions">
+    <v-empty-state
+      v-if="hasError"
+      headline="Whoops, 404"
+      title="Page not found"
+      text="The page you were looking for does not exist"
+      image="https://vuetifyjs.b-cdn.net/docs/images/logos/v.png"
+    ></v-empty-state>
+    <template v-else-if="sites.length">
       <v-navigation-drawer v-model="drawer" location="right" temporary>
         <template v-slot:prepend>
           <v-list-item
@@ -144,7 +183,7 @@ if (!sites.value?.length) {
         <v-list density="compact" nav>
           <v-list-item>
             <v-autocomplete
-               v-model="client"
+              v-model="client"
               :items="clientOptions"
               color="blue-grey-lighten-2"
               label="Client"
@@ -180,16 +219,20 @@ if (!sites.value?.length) {
         <template v-slot:append>
           <v-divider></v-divider>
           <v-list-item>
-            <v-btn density="compact" @click="applyFilters()">Apply</v-btn>
-            <v-btn density="compact" @click="clearFilters()"
-              >Clear</v-btn
-            ></v-list-item
+            <div class="d-flex justify-space-between my-2">
+              <v-btn density="compact" class="p-2" @click="applyFilters()"
+                >Apply</v-btn
+              >
+              <v-btn density="compact" class="p-2" @click="clearFilters()"
+                >Clear</v-btn
+              >
+            </div></v-list-item
           >
         </template>
       </v-navigation-drawer>
       <v-container>
-        <v-row align="center" justify="center">
-          <v-col cols="6">
+        <v-row>
+          <v-col cols="12" sm="12" md="6">
             <v-text-field
               label="Search site"
               placeholder="Type to search a site"
@@ -197,7 +240,6 @@ if (!sites.value?.length) {
               outlined
               dense
               hide-details="auto"
-              class="my-2 mx-2"
               clearable
               @click:clear="clearSearch"
               @click:append-inner="search"
@@ -205,62 +247,81 @@ if (!sites.value?.length) {
             >
             </v-text-field>
           </v-col>
-          <v-col cols="4">
-            <v-select
-              label="Sort by"
-              v-model="sortBy"
-              :items="sortOptions"
-            ></v-select>
-            <v-btn
-              density="compact"
-              :icon="
-                sortOrder === Direction.ASC
-                  ? 'mdi-sort-ascending'
-                  : 'mdi-sort-descending'
-              "
-              @click="
-                sortOrder =
-                  sortOrder === Direction.ASC ? Direction.DESC : Direction.ASC
-              "
-            ></v-btn>
+          <v-col cols="12" sm="12" md="6">
+            <v-row>
+              <v-col cols="6" sm="8">
+                <v-select
+                  label="Sort by"
+                  v-model="sortBy"
+                  :items="sortOptions"
+                  clearable
+                ></v-select>
+              </v-col>
+              <v-col cols="6" sm="4">
+                <v-btn-toggle v-model="sortOrder" color="primary" mandatory>
+                  <v-btn
+                    icon="mdi-sort-ascending"
+                    :value="Direction.ASC"
+                  ></v-btn>
+                  <v-btn
+                    icon="mdi-sort-descending"
+                    :value="Direction.DESC"
+                  ></v-btn>
+                </v-btn-toggle>
+                <v-btn
+                  variant="plain"
+                  icon="mdi-filter-variant"
+                  @click="toggleDrawer"
+                ></v-btn>
+              </v-col>
+            </v-row>
           </v-col>
-          <v-col cols="2">
-            <v-btn
-              density="compact"
-              icon="mdi-plus"
-              @click="drawer = !drawer"
-            ></v-btn>
+        </v-row>
+        <v-row>
+          <v-col>
+            <v-list three-line>
+              <template v-for="site in sites" :key="site.id">
+                <v-list-item
+                  :title="site.title"
+                  append-icon="mdi-chevron-right"
+                  :prepend-avatar="getAvatar(site)"
+                  :to="`/sites/${site.id}`"
+                  lines="three"
+                >
+                  <template #subtitle>
+                    <span>{{ getAddress(site) }}</span
+                    ><br />
+                    <span class="flex">{{ getContact(site) }}</span>
+                  </template>
+                </v-list-item>
+                <v-divider inset></v-divider>
+              </template>
+            </v-list>
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col>
+            <div>
+              <v-pagination
+                v-model="page"
+                :length="length"
+                @first="gotoPage($event)"
+                @last="gotoPage($event)"
+                @prev="gotoPage($event)"
+                @next="gotoPage($event)"
+                @update:modelValue="page = $event"
+              />
+            </div>
           </v-col>
         </v-row>
       </v-container>
-      <v-list three-line>
-        <v-list-item
-          v-for="site in sites"
-          :key="site.id"
-          :title="site.title"
-          append-icon="mdi-chevron-right"
-          :prepend-avatar="getAvatar(site)"
-          :to="`/sites/${site.id}`"
-        >
-          <template #subtitle>
-            <div>
-              <div class="mr-2">{{ getAddress(site) }}</div>
-              <div>{{ getContact(site) }}</div>
-            </div>
-          </template>
-        </v-list-item>
-      </v-list>
-      <div>
-        <v-pagination
-          v-model="page"
-          :length="length"
-          @first="page = 1"
-          @last="page = length"
-          @prev="page--"
-          @next="page++"
-          @update:modelValue="page = $event"
-        />
-      </div>
-    </div>
-  </div>
+    </template>
+    <v-empty-state
+      v-else
+      headline="Whoops, Empty"
+      title="No item found"
+      text="Seems we are out of data"
+      image="https://vuetifyjs.b-cdn.net/docs/images/logos/v.png"
+    ></v-empty-state>
+  </v-skeleton-loader>
 </template>

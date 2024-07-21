@@ -17,6 +17,7 @@ export const useFetch = <T>() => {
     meta: null,
   });
 
+  //Convert params object to querystring
   const getQuery = (params: Record<string, string> | undefined) => {
     return params
     ? Object.keys(params)
@@ -27,6 +28,7 @@ export const useFetch = <T>() => {
     : "";
   }
 
+  //For fetching where the states can be central
   const fetchData = async (
     url: string,
     params?: Record<string, string>,
@@ -55,6 +57,7 @@ export const useFetch = <T>() => {
     }
   };
 
+  //For fetching where there's need to return the response to the caller
   const basicFetch = async (
     url: string,
     params?: Record<string, string>,

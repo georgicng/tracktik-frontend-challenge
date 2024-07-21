@@ -1,5 +1,35 @@
 import { Site } from "@/types";
 
+//Extracting the address from site object
+export const getAddress = (site: Site) => {
+  if (site.address) {
+    const { street, city } = site.address;
+    return `${street}, ${city}`;
+  }
+  return "";
+};
+
+//Extracting the contact from site object
+export const getContact = (site: Site) => {
+  if (site?.contacts?.main) {
+    const { firstName, lastName } = site.contacts.main;
+    return `${firstName} ${lastName}`;
+  }
+  return "";
+};
+
+//extract the avatar from site object
+export const getAvatar = (site: Site, index?: number): string => {
+  if (site?.images?.length) {
+    return index && site.images[index] || site.images[0];
+  }
+  return "/";
+};
+
+//Using hardcoded url to avoid complexity of setting env variables snce it's just a demo
+export const baseURL = "https://tracktik-challenge.staffr.com";
+
+//Using this for the filters, since there's no endpoint for getting countries
 export const countryList = [
 	"Afghanistan",
 	"Albania",
@@ -251,26 +281,3 @@ export const countryList = [
 	"Zimbabwe",
 	"Åland Islands"
 ] as const;
-
-export const getAddress = (site: Site) => {
-  if (site.address) {
-    const { street, city } = site.address;
-    return `${street}, ${city}`;
-  }
-  return "";
-};
-
-export const getContact = (site: Site) => {
-  if (site?.contacts?.main) {
-    const { firstName, lastName } = site.contacts.main;
-    return `${firstName} ${lastName}`;
-  }
-  return "";
-};
-
-export const getAvatar = (site: Site) => {
-  if (site?.images?.length) {
-    return site?.images[0];
-  }
-  return "/";
-};

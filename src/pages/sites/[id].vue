@@ -4,7 +4,7 @@ import { useFetch } from "@/composables/useFetch";
 import { useStore } from "@/composables/useState";
 import { Site } from "@/types";
 import { useRoute } from "vue-router";
-import { getAddress, getContact, getAvatar } from "@/utils";
+import { getAddress, getContact, getAvatar, baseURL } from "@/utils";
 
 const route = useRoute();
 const { siteById } = useStore();
@@ -19,9 +19,8 @@ watch(
       site.value = siteById.value[newId];
       return;
     }
-    await fetchData(
-      `https://tracktik-challenge.staffr.com/sites/${newId}`
-    );
+    //Using hardcoded url to avoid complexity of seting env variables
+    await fetchData(`${baseURL}/sites/${newId}`);
     site.value = data.value;
   },
   { immediate: true }
@@ -29,17 +28,27 @@ watch(
 </script>
 
 <template>
-  <div>
-    <p v-if="isLoading">loading....</p>
-    <p v-else-if="hasError">Unable to retrieve users</p>
-    <v-card v-else-if="site" class="mx-auto">
+  <v-skeleton-loader v-if="isLoading" type="card-avatar, article, actions">
+  </v-skeleton-loader>
+  <v-empty-state
+    v-else-if="hasError"
+    headline="Whoops, 404"
+    title="Page not found"
+    text="The page you were looking for does not exist"
+    image="https://vuetifyjs.b-cdn.net/docs/images/logos/v.png"
+  ></v-empty-state>
+  <v-card v-else-if="site" class="mx-auto">
+    <v-toolbar flat>
+      <v-btn icon @click="$router.go(-1)">
+        <v-icon>mdi-chevron-left</v-icon>
+      </v-btn>
       <v-list three-line class="blue" dark>
         <v-list-item
           :key="site.id"
           :title="site.title"
-          prepend-icon="mdi-chevron-left"
+          :prepend-avatar="getAvatar(site, 2)"
           :to="`/sites/${site.id}`"
-          @click="$router.go(-1)"
+          lines="three"
         >
           <template #subtitle>
             <div>
@@ -49,25 +58,22 @@ watch(
           </template>
         </v-list-item>
       </v-list>
+    </v-toolbar>
 
-      <v-img :src="getAvatar(site)" max-height="400" contain />
+    <v-img :src="getAvatar(site)" max-height="400" contain />
 
-      <v-list two-line v-if="site.contacts">
-        <v-list-item
-          prepend-icon="mdi-account"
-          :title="getContact(site)"
-          :subtitle="site.contacts.main.jobTitle"
-        />
-        <v-list-item
-          prepend-icon="mdi-phone"
-          :title="site.contacts.main.phoneNumber"
-        />
-        <v-list-item
-          prepend-icon="mdi-email"
-          :title="site.contacts.main.email"
-        />
-        <v-list-item prepend-icon="mdi-map-marker" :title="getAddress(site)" />
-      </v-list>
-    </v-card>
-  </div>
+    <v-list two-line v-if="site.contacts">
+      <v-list-item
+        prepend-icon="mdi-account"
+        :title="getContact(site)"
+        :subtitle="site.contacts.main.jobTitle"
+      />
+      <v-list-item
+        prepend-icon="mdi-phone"
+        :title="site.contacts.main.phoneNumber"
+      />
+      <v-list-item prepend-icon="mdi-email" :title="site.contacts.main.email" />
+      <v-list-item prepend-icon="mdi-map-marker" :title="getAddress(site)" />
+    </v-list>
+  </v-card>
 </template>

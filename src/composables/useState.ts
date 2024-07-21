@@ -15,8 +15,10 @@ const state = ref<State>({
   clients: [],
 });
 
+//Basic store for state management
 export function useStore() {
   return {
+    //caching mechanism for sites data so there's no unnecessary api calls in the detail view
     sites: computed(() => state.value.sites),
     totalCount: computed(() => state.value.totalCount),
     siteById: computed(() =>
@@ -33,6 +35,7 @@ export function useStore() {
       };
     },
 
+    //Using this for filters
     clients: computed(() => state.value.clients),
     clientOptions: computed(() => state.value.clients?.map(item => ({ title: item.givenName, value: item.id}))),
     tagOptions: computed(() => state.value.clients?.flatMap(item => item.tags)),
@@ -43,6 +46,7 @@ export function useStore() {
       };
     },
 
+    //Using this to set the user avatar
     user: computed(() => state.value.user),
     setUser: (user: User) => {
       state.value = {
