@@ -271,7 +271,7 @@ if (!sites.value?.length) {
       </v-navigation-drawer>
       <v-container>
         <v-row>
-          <v-col cols="12" sm="12" md="6">
+          <v-col cols="12" sm="12" md="6" class="m-1">
             <v-text-field
               label="Search site"
               placeholder="Type to search a site"
@@ -286,7 +286,7 @@ if (!sites.value?.length) {
             >
             </v-text-field>
           </v-col>
-          <v-col cols="12" sm="12" md="6">
+          <v-col cols="12" sm="12" md="6" class="m-1">
             <v-row>
               <v-col cols="6" sm="8">
                 <v-select
@@ -307,16 +307,19 @@ if (!sites.value?.length) {
                     :value="Direction.DESC"
                   ></v-btn>
                 </v-btn-toggle>
-                <v-btn
-                  variant="plain"
+                <v-fab
+                  :active="!drawer"
                   icon="mdi-filter-variant"
+                  location="right"
+                  sticky
+                  offset
                   @click="toggleDrawer"
-                ></v-btn>
+                ></v-fab>
               </v-col>
             </v-row>
           </v-col>
         </v-row>
-        <v-row>
+        <v-row style="margin-top:-40px">
           <v-col>
             <v-list three-line>
               <template v-for="site in sites" :key="site.id">

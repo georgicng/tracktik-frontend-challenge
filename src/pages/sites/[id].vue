@@ -44,7 +44,7 @@ watch(
       <v-btn icon @click="$router.go(-1)">
         <v-icon>mdi-chevron-left</v-icon>
       </v-btn>
-      <v-list three-line bg-color="primary" variant="plain" class="blue">
+      <v-list three-line bg-color="primary" variant="plain">
         <v-list-item
           :key="site.id"
           :title="site.title"
