@@ -17,6 +17,16 @@ export const useFetch = <T>() => {
     meta: null,
   });
 
+  const getQuery = (params: Record<string, string> | undefined) => {
+    return params
+    ? Object.keys(params)
+        .map(
+          (k) => `${encodeURIComponent(k)}=${encodeURIComponent(params[k])}`
+        )
+        .join("&")
+    : "";
+  }
+
   const fetchData = async (
     url: string,
     params?: Record<string, string>,
@@ -25,14 +35,7 @@ export const useFetch = <T>() => {
     state.isLoading = true;
 
     try {
-      const query = params
-        ? Object.keys(params)
-            .map(
-              (k) => `${encodeURIComponent(k)}=${encodeURIComponent(params[k])}`
-            )
-            .join("&")
-        : "";
-      const response = await fetch(`${url}?${query}`, options);
+      const response = await fetch(`${url}?${getQuery(params)}`, options);
 
       if (!response.ok) {
         throw new Error(response.statusText);
@@ -52,8 +55,23 @@ export const useFetch = <T>() => {
     }
   };
 
+  const basicFetch = async (
+    url: string,
+    params?: Record<string, string>,
+    options?: Record<string, unknown>
+  ) => {
+      const response = await fetch(`${url}?${getQuery(params)}`, options);
+
+      if (!response.ok) {
+        throw new Error(response.statusText);
+      }
+
+      return await response.json();
+  };
+
   return {
     ...toRefs(state),
     fetchData,
+    basicFetch
   };
 };

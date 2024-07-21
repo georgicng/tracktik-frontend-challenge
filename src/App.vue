@@ -1,5 +1,11 @@
 <script lang="ts" setup>
-import { onBeforeMount, ref, computed, watch } from "vue";
+import { onBeforeMount, ref } from "vue";
+import { useFetch } from "@/composables/useFetch";
+import { useStore } from "@/composables/useState";
+import { User,  } from "@/types";
+
+const { user, setUser } = useStore();
+const { basicFetch } = useFetch<User>();
 
 const drawer = ref(false);
 const menu = ref([
@@ -8,6 +14,12 @@ const menu = ref([
     value: "scheduling",
   },
 ]);
+
+onBeforeMount(() => {
+  basicFetch('https://tracktik-challenge.staffr.com/me').then((res) => {
+    setUser(res);
+  });
+})
 </script>
 
 <template>
@@ -21,6 +33,7 @@ const menu = ref([
       <v-toolbar-title>Scheduling</v-toolbar-title>
 
       <v-spacer></v-spacer>
+      <v-avatar v-if="user" :image="user.avatar"></v-avatar>
     </v-app-bar>
 
     <v-navigation-drawer
@@ -29,12 +42,6 @@ const menu = ref([
     >
       <v-list>
         <v-list-item :items="menu" title="Menu"></v-list-item>
-      </v-list>
-    </v-navigation-drawer>
-
-    <v-navigation-drawer location="right">
-      <v-list>
-        <v-list-item title="Drawer right"></v-list-item>
       </v-list>
     </v-navigation-drawer>
     <v-main>
