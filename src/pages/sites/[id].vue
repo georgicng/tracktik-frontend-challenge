@@ -38,11 +38,11 @@ watch(
     image="https://vuetifyjs.b-cdn.net/docs/images/logos/v.png"
   ></v-empty-state>
   <v-card v-else-if="site" class="mx-auto">
-    <v-toolbar flat>
+    <v-toolbar color="primary" flat>
       <v-btn icon @click="$router.go(-1)">
         <v-icon>mdi-chevron-left</v-icon>
       </v-btn>
-      <v-list three-line class="blue" dark>
+      <v-list three-line bg-color="primary" variant="plain" class="blue">
         <v-list-item
           :key="site.id"
           :title="site.title"

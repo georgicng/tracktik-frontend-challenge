@@ -13,8 +13,12 @@ const { basicFetch } = useFetch<User>();
 const drawer = ref(false);
 const menu = ref([
   {
-    title: "Scheduling",
-    value: "scheduling",
+    title: "Sites",
+    value: "sites",
+  },
+  {
+    title: "Clients",
+    value: "clients",
   },
 ]);
 
@@ -29,18 +33,17 @@ onBeforeMount(() => {
 
 <template>
   <v-layout class="rounded rounded-md">
-    <v-app-bar color="surface-variant">
+    <v-app-bar color="primary">
       <template v-slot:prepend>
         <v-app-bar-nav-icon
           variant="text"
           @click.stop="drawer = !drawer"
         ></v-app-bar-nav-icon>
       </template>
-      <v-spacer></v-spacer>
 
       <v-app-bar-title class="flex text-center">Scheduling</v-app-bar-title>
 
-      <v-spacer></v-spacer>
+
       <template v-slot:append>
       <v-btn icon>
         <v-icon>mdi-apps</v-icon>
@@ -48,14 +51,13 @@ onBeforeMount(() => {
       <v-avatar color="white">
         <span class="text-h5">D</span>
       </v-avatar>
+      <v-spacer></v-spacer>
       <!--v-avatar v-if="user" :image="user.avatar"></v-avatar-->
     </template>
     </v-app-bar>
 
     <v-navigation-drawer v-model="drawer" temporary>
-      <v-list>
-        <v-list-item :items="menu" title="Menu"></v-list-item>
-      </v-list>
+      <v-list :items="menu"></v-list>
     </v-navigation-drawer>
 
     <v-main>
