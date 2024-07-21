@@ -28,9 +28,9 @@ npm run serve
 npm run build
 ```
 
-### Run your unit tests
+### No unit tests
 ```
-npm run test:unit
+No custom components used
 ```
 
 ### Lints and fixes files

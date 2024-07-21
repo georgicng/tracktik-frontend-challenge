@@ -15,8 +15,7 @@ const { data, hasError, isLoading, fetchData } = useFetch<Site>();
 watch(
   () => route.params.id,
   async (newId) => {
-    if (!siteById.value) {
-      //Using hardcoded url to avoid complexity of seting env variables
+    if (!siteById?.value[newId as string]) {
       await fetchData(`${baseURL}/sites/${newId}`);
       if (data.value) {
         site.value  = data.value;
