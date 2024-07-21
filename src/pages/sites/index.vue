@@ -3,7 +3,13 @@ import { ref, computed, watch } from "vue";
 import { useFetch } from "@/composables/useFetch";
 import { useStore } from "@/composables/useState";
 import { useRouter, useRoute } from "vue-router";
-import { getAddress, getContact, getAvatar, countryList, baseURL } from "@/utils";
+import {
+  getAddress,
+  getContact,
+  getAvatar,
+  countryList,
+  baseURL,
+} from "@/utils";
 import { Site } from "@/types";
 
 //Routing specific variables
@@ -12,7 +18,7 @@ const route = useRoute();
 const getParam = (key: string, defaultValue: string | null) => {
   if (route.query[key]) {
     if (key === "_order") {
-      return Direction[route.query[key] as string];
+      return route.query[key] === "asc" ? Direction.ASC : Direction.DESC;
     }
     return route.query[key] as string;
   }
@@ -55,9 +61,28 @@ const sortOrder = ref(getParam("_order", Direction.ASC));
 const query = ref(getParam("q", ""));
 
 //Pagination related models
-const page = ref(parseInt(getParam("_page", "1")));
-const perPage = ref(parseInt(getParam("_limit", "10")));
-const length = computed(() => Math.floor(totalCount.value / perPage.value));
+const getPage = () => {
+  const val = getParam("_page", "1")
+  if (val) {
+    return parseInt(val);
+  }
+  return 1
+}
+const page = ref(getPage());
+const getPerPage = () => {
+  const val = getParam("_limit", "10")
+  if (val) {
+    return parseInt(val);
+  }
+  return 10
+}
+const perPage = ref(getPerPage());
+const length = computed(() => {
+  if (!totalCount.value) {
+    return 0;
+  }
+  return Math.floor(totalCount.value / perPage.value);
+});
 
 //Build query params for route update, ensure void arguments are not included in the query
 const params = computed(() => {
@@ -84,9 +109,10 @@ const { data, hasError, isLoading, meta, fetchData, basicFetch } =
 //Function to fetch sites data
 const fetch = async () => {
   await fetchData(`${baseURL}/sites`, params.value);
-  setSites(data.value, meta.value.count);
+  if (meta.value && data.value) {
+    setSites(data.value, meta.value.count);
+  }
 };
-
 
 //Pagination Actions
 const gotoPage = (input: number) => {
@@ -148,20 +174,21 @@ watch(
 
 //First load
 if (!sites.value?.length) {
-  Promise.all([
-    fetch(),
-    basicFetch(`${baseURL}/clients`),
-  ]).then((values) => {
+  //Fetching clients for the filter sidebar
+  Promise.all([fetch(), basicFetch(`${baseURL}/clients`)]).then((values) => {
     setClients(values[1]);
   });
 }
 </script>
 
 <template>
-  <v-toolbar flat>
+  <v-toolbar color="primary" flat>
     <v-toolbar-title class="flex text-center"> Sites </v-toolbar-title>
   </v-toolbar>
-  <v-skeleton-loader :loading="isLoading" type="actions, list-item-avatar-three-line, list-item-avatar-three-line, list-item-avatar-three-line, list-item-avatar-three-line, actions">
+  <v-skeleton-loader
+    :loading="isLoading"
+    type="actions, list-item-avatar-three-line, list-item-avatar-three-line, list-item-avatar-three-line, list-item-avatar-three-line, actions"
+  >
     <v-empty-state
       v-if="hasError"
       headline="Whoops, 404"
@@ -169,7 +196,7 @@ if (!sites.value?.length) {
       text="The page you were looking for does not exist"
       image="https://vuetifyjs.b-cdn.net/docs/images/logos/v.png"
     ></v-empty-state>
-    <template v-else-if="sites.length">
+    <template v-else-if="sites && sites.length">
       <v-navigation-drawer v-model="drawer" location="right" temporary>
         <template v-slot:prepend>
           <v-list-item

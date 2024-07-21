@@ -29,7 +29,7 @@ export const useFetch = <T>() => {
   }
 
   //For fetching where the states can be central
-  const fetchData = async (
+  const fetchData = async(
     url: string,
     params?: Record<string, string>,
     options?: Record<string, unknown>

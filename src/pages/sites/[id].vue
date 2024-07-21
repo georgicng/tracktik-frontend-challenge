@@ -8,20 +8,22 @@ import { getAddress, getContact, getAvatar, baseURL } from "@/utils";
 
 const route = useRoute();
 const { siteById } = useStore();
-const site = ref<Site | null>([]);
-const { data, hasError, isLoading, fetchData } = useFetch<Site[]>();
+const site = ref<Site | null>(null);
+const { data, hasError, isLoading, fetchData } = useFetch<Site>();
 
 // fetch the user information when params change
 watch(
   () => route.params.id,
   async (newId) => {
-    if (siteById.value[newId]) {
-      site.value = siteById.value[newId];
+    if (!siteById.value) {
+      //Using hardcoded url to avoid complexity of seting env variables
+      await fetchData(`${baseURL}/sites/${newId}`);
+      if (data.value) {
+        site.value  = data.value;
+      }
       return;
     }
-    //Using hardcoded url to avoid complexity of seting env variables
-    await fetchData(`${baseURL}/sites/${newId}`);
-    site.value = data.value;
+    site.value = siteById.value[newId as string];
   },
   { immediate: true }
 );

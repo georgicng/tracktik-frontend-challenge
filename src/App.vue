@@ -52,7 +52,7 @@ onBeforeMount(() => {
         <span class="text-h5">D</span>
       </v-avatar>
       <v-spacer></v-spacer>
-      <!--v-avatar v-if="user" :image="user.avatar"></v-avatar-->
+      <v-avatar v-if="user" :image="user.avatar"></v-avatar>
     </template>
     </v-app-bar>
 

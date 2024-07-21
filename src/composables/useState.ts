@@ -24,7 +24,7 @@ export function useStore() {
     siteById: computed(() =>
       state.value.sites?.reduce(
         (acc, item) => ({ ...acc, [item.id]: item }),
-        {}
+        {} as Record<string, Site>
       )
     ),
     setSites: (sites: Site[], totalCount: number) => {
