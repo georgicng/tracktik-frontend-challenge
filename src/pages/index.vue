@@ -164,6 +164,18 @@ const clearFilters = () => {
   router.push({ query: params.value });
 };
 
+//Clear and reload for empyty search
+const reload = () => {
+  country.value = null;
+  client.value = null;
+  tag.value = null;
+  page.value = 1;
+    query.value = null;
+    sortBy.value = null;
+    sortOrder.value = null;
+  router.push({ query: params.value });
+};
+
 //Fetch Data on route update
 watch(
   () => route.query,
@@ -194,7 +206,7 @@ if (!sites.value?.length) {
       headline="Whoops, 404"
       title="Page not found"
       text="The page you were looking for does not exist"
-      image="https://vuetifyjs.b-cdn.net/docs/images/logos/v.png"
+      image="https://placehold.co/600x400"
     ></v-empty-state>
     <template v-else-if="sites && sites.length">
       <v-navigation-drawer v-model="drawer" location="right" temporary>
@@ -348,7 +360,19 @@ if (!sites.value?.length) {
       headline="Whoops, Empty"
       title="No item found"
       text="Seems we are out of data"
-      image="https://vuetifyjs.b-cdn.net/docs/images/logos/v.png"
-    ></v-empty-state>
+      image="https://placehold.co/600x400"
+    >
+    <template v-slot:actions>
+      <v-btn
+        class="text-none"
+        color="white"
+        elevation="1"
+        rounded="lg"
+        size="small"
+        text="Reload"
+        width="96"
+        @click="reload"
+      ></v-btn>
+    </template></v-empty-state>
   </v-skeleton-loader>
 </template>
